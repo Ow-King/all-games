@@ -1,15 +1,45 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider, Redirect, Stack } from 'expo-router';
+import { View, ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { AuthProvider, AuthContext } from '@/context/auth-context';
+import { useAuth } from '@/hooks/use-auth';
+import { useTheme } from '@/hooks/use-theme';
 
-export default function TabLayout() {
+function RootLayoutNav() {
+  const { user, isLoading } = useAuth();
+  const colors = useTheme();
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <ActivityIndicator size="large" color="#208AEF" />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <RootLayoutNav />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
